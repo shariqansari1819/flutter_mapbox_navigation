@@ -81,6 +81,32 @@ class MethodChannelFlutterMapboxNavigation
   }
 
   @override
+  Future<bool?> startOffNavigation(
+    String routes,
+    MapBoxOptions options,
+  ) async {
+    // assert(wayPoints.length > 1, 'Error: WayPoints must be at least 2');
+    // if (Platform.isIOS && wayPoints.length > 3) {
+    //   assert(options.mode != MapBoxNavigationMode.drivingWithTraffic, '''
+    //         Error: Cannot use drivingWithTraffic Mode when you have more than 3 Stops
+    //       ''');
+    // }
+
+    // final pointList = _getPointListFromWayPoints(wayPoints);
+    // var i = 0;
+    // final wayPointMap = {for (var e in pointList) i++: e};
+
+    final args = options.toMap();
+    args['routes'] = routes;
+
+    _routeEventSubscription = routeEventsListener!.listen(_onProgressData);
+    final result = await methodChannel.invokeMethod('startOffNavigation', args);
+    if (result is bool) return result;
+    log(result.toString());
+    return false;
+  }
+
+  @override
   Future<dynamic> addWayPoints({required List<WayPoint> wayPoints}) async {
     assert(wayPoints.isNotEmpty, 'Error: WayPoints must be at least 1');
     final pointList = _getPointListFromWayPoints(wayPoints);
@@ -89,6 +115,19 @@ class MethodChannelFlutterMapboxNavigation
     final args = <String, dynamic>{};
     args['wayPoints'] = wayPointMap;
     await methodChannel.invokeMethod('addWayPoints', args);
+  }
+
+  @override
+  Future<String?> getRoutePoints({required List<WayPoint> wayPoints}) async {
+    assert(wayPoints.isNotEmpty, 'Error: WayPoints must be at least 1');
+    final pointList = _getPointListFromWayPoints(wayPoints);
+    var i = 0;
+    final wayPointMap = {for (var e in pointList) i++: e};
+    final args = <String, dynamic>{};
+    args['wayPoints'] = wayPointMap;
+    print(args["wayPoints"]);
+    var reuslt = await methodChannel.invokeMethod<String?>('getRoutePoints', args);
+    return reuslt;
   }
 
   @override

@@ -42,6 +42,18 @@ class MockFlutterMapboxNavigationPlatform
     ValueSetter<RouteEvent> listener,
   ) =>
       Future.value();
+
+  @override
+  Future<String?> getRoutePoints({required List<WayPoint> wayPoints}) {
+    // TODO: implement getRoutePoints
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<bool?> startOffNavigation(String routes, MapBoxOptions options) {
+    // TODO: implement startOffNavigation
+    throw UnimplementedError();
+  }
 }
 
 void main() {

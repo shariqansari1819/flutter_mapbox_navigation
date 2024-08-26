@@ -1,7 +1,11 @@
 import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_mapbox_navigation/flutter_mapbox_navigation.dart';
 
 class SampleNavigationApp extends StatefulWidget {
@@ -99,6 +103,20 @@ class _SampleNavigationAppState extends State<SampleNavigationApp> {
     });
   }
 
+  Future<String> writeJsonToFile() async {
+    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
+    String jsonData = sharedPreferences.getString("routesJson") ?? "";
+    final directory = await getTemporaryDirectory();
+    final filePath = '${directory.path}/temp.json';
+    final file = File(filePath);
+
+    // Write the JSON string to the file
+    await file.writeAsString(jsonData);
+
+    // Return the file path
+    return filePath;
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -143,8 +161,21 @@ class _SampleNavigationAppState extends State<SampleNavigationApp> {
                             opt.bannerInstructionsEnabled = true;
                             opt.units = VoiceUnits.metric;
                             opt.language = "de-DE";
-                            await MapBoxNavigation.instance
-                                .startNavigation(wayPoints: wayPoints, options: opt);
+                            // var result =
+                            //     await MapBoxNavigation.instance.getRoutePoints(
+                            //   wayPoints: wayPoints,
+                            // );
+                            // SharedPreferences pref =
+                            //     await SharedPreferences.getInstance();
+                            // await pref.setString("routesJson", result!);
+                            // print(result);
+                            var filePath = await writeJsonToFile();
+                            // json.encode(jsonData);
+                            // print(jsonData);
+                            await MapBoxNavigation.instance.startOffNavigation(
+                              routes: filePath,
+                              options: opt,
+                            );
                           },
                         ),
                         const SizedBox(

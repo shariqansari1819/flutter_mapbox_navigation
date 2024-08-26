@@ -17,6 +17,12 @@ public class NavigationLauncher {
         activity.startActivity(navigationIntent);
     }
 
+    public static void startOffNavigation(Activity activity, String route) {
+        Intent navigationIntent = new Intent(activity, NavigationActivity.class);
+        navigationIntent.putExtra("routes", route);
+        activity.startActivity(navigationIntent);
+    }
+
     public static void addWayPoints(Activity activity, List<Waypoint> wayPoints) {
         Intent navigationIntent = new Intent(activity, NavigationActivity.class);
         navigationIntent.setAction(KEY_ADD_WAYPOINTS);

@@ -6,6 +6,7 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.location.Location
 import android.os.Bundle
+import android.util.Log
 
 import org.json.JSONObject
 import androidx.appcompat.app.AppCompatActivity
@@ -14,12 +15,15 @@ import com.eopeter.fluttermapboxnavigation.R
 import com.eopeter.fluttermapboxnavigation.databinding.NavigationActivityBinding
 import com.eopeter.fluttermapboxnavigation.models.MapBoxEvents
 import com.eopeter.fluttermapboxnavigation.models.MapBoxRouteProgressEvent
+import com.eopeter.fluttermapboxnavigation.models.NavigationJson
 import com.eopeter.fluttermapboxnavigation.models.Waypoint
 import com.eopeter.fluttermapboxnavigation.models.WaypointSet
 import com.eopeter.fluttermapboxnavigation.utilities.CustomInfoPanelEndNavButtonBinder
 import com.eopeter.fluttermapboxnavigation.utilities.PluginUtilities
 import com.eopeter.fluttermapboxnavigation.utilities.PluginUtilities.Companion.sendEvent
 import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
+import com.mapbox.api.directions.v5.models.DirectionsResponse
 import com.mapbox.api.directions.v5.models.DirectionsRoute
 import com.mapbox.api.directions.v5.models.RouteOptions
 import com.mapbox.geojson.Point
@@ -49,6 +53,7 @@ import com.mapbox.navigation.core.trip.session.VoiceInstructionsObserver
 import com.mapbox.navigation.dropin.map.MapViewObserver
 import com.mapbox.navigation.dropin.navigationview.NavigationViewListener
 import com.mapbox.navigation.utils.internal.ifNonNull
+import java.io.File
 
 class NavigationActivity : AppCompatActivity() {
     private var finishBroadcastReceiver: BroadcastReceiver? = null
@@ -59,6 +64,7 @@ class NavigationActivity : AppCompatActivity() {
     private var accessToken: String? = null
     private var lastLocation: Location? = null
     private var isNavigationInProgress = false
+    private var route: String? = null
 
     private val navigationStateListener = object : NavigationViewListener() {
         override fun onFreeDrive() {
@@ -117,8 +123,10 @@ class NavigationActivity : AppCompatActivity() {
                 CustomInfoPanelEndNavButtonBinder(act)
         }
 
-        MapboxNavigationApp.current()?.registerBannerInstructionsObserver(this.bannerInstructionObserver)
-        MapboxNavigationApp.current()?.registerVoiceInstructionsObserver(this.voiceInstructionObserver)
+        MapboxNavigationApp.current()
+            ?.registerBannerInstructionsObserver(this.bannerInstructionObserver)
+        MapboxNavigationApp.current()
+            ?.registerVoiceInstructionsObserver(this.voiceInstructionObserver)
         MapboxNavigationApp.current()?.registerOffRouteObserver(this.offRouteObserver)
         MapboxNavigationApp.current()?.registerRoutesObserver(this.routesObserver)
         MapboxNavigationApp.current()?.registerLocationObserver(locationObserver)
@@ -177,10 +185,63 @@ class NavigationActivity : AppCompatActivity() {
             return
         }
 
-        val p = intent.getSerializableExtra("waypoints") as? MutableList<Waypoint>
-        if (p != null) points = p
-        points.map { waypointSet.add(it) }
-        requestRoutes(waypointSet)
+        if (intent.hasExtra("waypoints")) {
+            val p = intent.getSerializableExtra("waypoints") as? MutableList<Waypoint>
+            if (p != null) points = p
+            points.map { waypointSet.add(it) }
+            requestRoutes(waypointSet)
+        } else if (intent.hasExtra("routes")) {
+            route = File(intent.getStringExtra("routes")).readText()
+            sendEvent(
+                MapBoxEvents.ROUTE_BUILT,
+                route ?: ""
+            )
+//            val type = object : TypeToken<List<NavigationJson>>() {}.type
+//            val response: List<NavigationJson> = Gson().fromJson(route, type)
+//            var navigationList = arrayListOf<NavigationRoute>()
+//            navigationList.addAll(
+//                NavigationRoute.create(
+//                        DirectionsResponse.fromJson(
+//                            Gson().toJson(
+//                                response[0].directionsResponse
+//                            )
+//                        ), RouteOptions.fromJson(Gson().toJson(response[0].routeOptions))
+//                    ))
+
+
+            val directionsRoutesList: List<String> =
+                Gson().fromJson(route, object : TypeToken<List<String>>() {}.type)
+            var navigationList = directionsRoutesList.map { json ->
+                val directionsRoute = DirectionsResponse.fromJson(json)
+                NavigationRoute.create(
+                    directionsRoute, RouteOptions.fromJson(
+                        "{\n" +
+                                "        \"alternatives\": true,\n" +
+                                "        \"annotations\": \"congestion_numeric,maxspeed,closure,speed,duration,distance\",\n" +
+                                "        \"bannerInstructions\": true,\n" +
+                                "        \"baseUrl\": \"https://api.mapbox.com\",\n" +
+                                "        \"continueStraight\": true,\n" +
+                                "        \"coordinates\": \"-122.4353977,37.7744068;-122.4240981,37.7655696\",\n" +
+                                "        \"enableRefresh\": true,\n" +
+                                "        \"geometries\": \"polyline6\",\n" +
+                                "        \"language\": \"en\",\n" +
+                                "        \"overview\": \"full\",\n" +
+                                "        \"profile\": \"driving-traffic\",\n" +
+                                "        \"roundaboutExits\": true,\n" +
+                                "        \"steps\": true,\n" +
+                                "        \"user\": \"mapbox\",\n" +
+                                "        \"voiceInstructions\": true,\n" +
+                                "        \"voiceUnits\": \"imperial\",\n" +
+                                "        \"waypointIndices\": \"0;1\",\n" +
+                                "        \"waypointNames\": \"Home;Store\"\n" +
+                                "      }"
+                    )
+                )
+            }
+
+            binding.navigationView.api.routeReplayEnabled(FlutterMapboxNavigationPlugin.simulateRoute)
+            binding.navigationView.api.startActiveGuidance(navigationList[0])
+        }
 
     }
 
@@ -194,8 +255,10 @@ class NavigationActivity : AppCompatActivity() {
         }
         binding.navigationView.removeListener(navigationStateListener)
 
-        MapboxNavigationApp.current()?.unregisterBannerInstructionsObserver(this.bannerInstructionObserver)
-        MapboxNavigationApp.current()?.unregisterVoiceInstructionsObserver(this.voiceInstructionObserver)
+        MapboxNavigationApp.current()
+            ?.unregisterBannerInstructionsObserver(this.bannerInstructionObserver)
+        MapboxNavigationApp.current()
+            ?.unregisterVoiceInstructionsObserver(this.voiceInstructionObserver)
         MapboxNavigationApp.current()?.unregisterOffRouteObserver(this.offRouteObserver)
         MapboxNavigationApp.current()?.unregisterRoutesObserver(this.routesObserver)
         MapboxNavigationApp.current()?.unregisterLocationObserver(locationObserver)
@@ -228,11 +291,17 @@ class NavigationActivity : AppCompatActivity() {
                 .steps(true)
                 .build(),
             callback = object : NavigationRouterCallback {
-                override fun onCanceled(routeOptions: RouteOptions, routerOrigin: RouterOrigin) {
+                override fun onCanceled(
+                    routeOptions: RouteOptions,
+                    routerOrigin: RouterOrigin
+                ) {
                     sendEvent(MapBoxEvents.ROUTE_BUILD_CANCELLED)
                 }
 
-                override fun onFailure(reasons: List<RouterFailure>, routeOptions: RouteOptions) {
+                override fun onFailure(
+                    reasons: List<RouterFailure>,
+                    routeOptions: RouteOptions
+                ) {
                     sendEvent(MapBoxEvents.ROUTE_BUILD_FAILED)
                 }
 
@@ -244,6 +313,7 @@ class NavigationActivity : AppCompatActivity() {
                         MapBoxEvents.ROUTE_BUILT,
                         Gson().toJson(routes.map { it.directionsRoute.toJson() })
                     )
+                    Log.d("MapboxRoutes", Gson().toJson(waypointSet))
                     if (routes.isEmpty()) {
                         sendEvent(MapBoxEvents.ROUTE_BUILD_NO_ROUTES_FOUND)
                         return
@@ -312,7 +382,10 @@ class NavigationActivity : AppCompatActivity() {
                     sendEvent(MapBoxEvents.ROUTE_BUILD_FAILED)
                 }
 
-                override fun onCanceled(routeOptions: RouteOptions, routerOrigin: RouterOrigin) {
+                override fun onCanceled(
+                    routeOptions: RouteOptions,
+                    routerOrigin: RouterOrigin
+                ) {
                     sendEvent(MapBoxEvents.ROUTE_BUILD_CANCELLED)
                 }
             }
