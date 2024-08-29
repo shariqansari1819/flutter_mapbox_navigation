@@ -11,6 +11,7 @@ import com.eopeter.fluttermapboxnavigation.factory.EmbeddedNavigationViewFactory
 import com.eopeter.fluttermapboxnavigation.models.MapBoxEvents
 import com.eopeter.fluttermapboxnavigation.models.Waypoint
 import com.eopeter.fluttermapboxnavigation.models.WaypointSet
+import com.eopeter.fluttermapboxnavigation.utilities.PluginUtilities
 import com.eopeter.fluttermapboxnavigation.utilities.PluginUtilities.Companion.sendEvent
 import com.google.gson.Gson
 import com.mapbox.api.directions.v5.DirectionsCriteria
@@ -18,6 +19,7 @@ import com.mapbox.api.directions.v5.models.DirectionsRoute
 import com.mapbox.api.directions.v5.models.RouteOptions
 import com.mapbox.navigation.base.extensions.applyDefaultNavigationOptions
 import com.mapbox.navigation.base.extensions.applyLanguageAndVoiceUnitOptions
+import com.mapbox.navigation.base.options.NavigationOptions
 import com.mapbox.navigation.base.route.NavigationRoute
 import com.mapbox.navigation.base.route.NavigationRouterCallback
 import com.mapbox.navigation.base.route.RouterFailure
@@ -401,6 +403,17 @@ class FlutterMapboxNavigationPlugin : FlutterPlugin, MethodCallHandler,
         points.map { waypointSet.add(it) }
 
         sendEvent(MapBoxEvents.ROUTE_BUILDING)
+        var accessToken =
+            PluginUtilities.getResourceFromContext(currentContext, "mapbox_access_token")
+
+        val navigationOptions = NavigationOptions.Builder(currentContext)
+            .accessToken(accessToken)
+            .build()
+//        MapboxNavigationApp
+//            .setup(navigationOptions)
+//            .attach(this)
+//
+        MapboxNavigationApp.current()
         MapboxNavigationApp.current()!!.requestRoutes(
             routeOptions = RouteOptions
                 .builder()

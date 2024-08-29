@@ -44,16 +44,18 @@ class _SampleNavigationAppState extends State<SampleNavigationApp> {
       longitude: -77.03651905059814,
       isSilent: false);
 
+  // {0: {Order: 0, Name: Dunmore Town, The Bahamas, Latitude: 25.50011, Longitude: -76.6340511, IsSilent: false}, 1: {Order: 1, Name: Fort Charlotte, Latitude: 25.0769699, Longitude: -77.3589508, IsSilent: false}}
+
   final _home = WayPoint(
       name: "Home",
-      latitude: 37.77440680146262,
-      longitude: -122.43539772352648,
+      latitude: 25.50011,
+      longitude: -76.6340511,
       isSilent: false);
 
   final _store = WayPoint(
       name: "Store",
-      latitude: 37.76556957793795,
-      longitude: -122.42409811526268,
+      latitude: 25.0769699,
+      longitude: -77.3589508,
       isSilent: false);
 
   bool _isMultipleStop = false;
@@ -161,14 +163,14 @@ class _SampleNavigationAppState extends State<SampleNavigationApp> {
                             opt.bannerInstructionsEnabled = true;
                             opt.units = VoiceUnits.metric;
                             opt.language = "de-DE";
-                            // var result =
-                            //     await MapBoxNavigation.instance.getRoutePoints(
-                            //   wayPoints: wayPoints,
-                            // );
-                            // SharedPreferences pref =
-                            //     await SharedPreferences.getInstance();
-                            // await pref.setString("routesJson", result!);
-                            // print(result);
+                            var result =
+                                await MapBoxNavigation.instance.getRoutePoints(
+                              wayPoints: wayPoints,
+                            );
+                            SharedPreferences pref =
+                                await SharedPreferences.getInstance();
+                            await pref.setString("routesJson", result!);
+                            print(result);
                             var filePath = await writeJsonToFile();
                             // json.encode(jsonData);
                             // print(jsonData);
@@ -343,20 +345,20 @@ class _SampleNavigationAppState extends State<SampleNavigationApp> {
                 ),
               ),
             ),
-            SizedBox(
-              height: 300,
-              child: Container(
-                color: Colors.grey,
-                child: MapBoxNavigationView(
-                    options: _navigationOption,
-                    onRouteEvent: _onEmbeddedRouteEvent,
-                    onCreated:
-                        (MapBoxNavigationViewController controller) async {
-                      _controller = controller;
-                      controller.initialize();
-                    }),
-              ),
-            )
+            // SizedBox(
+            //   height: 300,
+            //   child: Container(
+            //     color: Colors.grey,
+            //     child: MapBoxNavigationView(
+            //         options: _navigationOption,
+            //         onRouteEvent: _onEmbeddedRouteEvent,
+            //         onCreated:
+            //             (MapBoxNavigationViewController controller) async {
+            //           _controller = controller;
+            //           controller.initialize();
+            //         }),
+            //   ),
+            // )
           ]),
         ),
       ),
