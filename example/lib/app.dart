@@ -48,14 +48,14 @@ class _SampleNavigationAppState extends State<SampleNavigationApp> {
 
   final _home = WayPoint(
       name: "Home",
-      latitude: 25.50011,
-      longitude: -76.6340511,
+      latitude: 31.5353065,
+      longitude: 74.2866657,
       isSilent: false);
 
   final _store = WayPoint(
       name: "Store",
-      latitude: 25.0769699,
-      longitude: -77.3589508,
+      latitude: 31.5502603,
+      longitude: 74.270116,
       isSilent: false);
 
   bool _isMultipleStop = false;
@@ -91,7 +91,7 @@ class _SampleNavigationAppState extends State<SampleNavigationApp> {
     //_navigationOption.initialLatitude = 36.1175275;
     //_navigationOption.initialLongitude = -115.1839524;
     MapBoxNavigation.instance.registerRouteEventListener(_onEmbeddedRouteEvent);
-
+    //
     String? platformVersion;
     // Platform messages may fail, so we use a try/catch PlatformException.
     try {
@@ -171,13 +171,6 @@ class _SampleNavigationAppState extends State<SampleNavigationApp> {
                                 await SharedPreferences.getInstance();
                             await pref.setString("routesJson", result!);
                             print(result);
-                            var filePath = await writeJsonToFile();
-                            // json.encode(jsonData);
-                            // print(jsonData);
-                            await MapBoxNavigation.instance.startOffNavigation(
-                              routes: filePath,
-                              options: opt,
-                            );
                           },
                         ),
                         const SizedBox(
@@ -186,31 +179,35 @@ class _SampleNavigationAppState extends State<SampleNavigationApp> {
                         ElevatedButton(
                           child: const Text("Start Multi Stop"),
                           onPressed: () async {
-                            _isMultipleStop = true;
-                            var wayPoints = <WayPoint>[];
-                            wayPoints.add(_origin);
-                            wayPoints.add(_stop1);
-                            wayPoints.add(_stop2);
-                            wayPoints.add(_stop3);
-                            wayPoints.add(_destination);
-
-                            MapBoxNavigation.instance.startNavigation(
-                                wayPoints: wayPoints,
-                                options: MapBoxOptions(
-                                    mode: MapBoxNavigationMode.driving,
-                                    simulateRoute: true,
-                                    language: "en",
-                                    allowsUTurnAtWayPoints: true,
-                                    units: VoiceUnits.metric));
-                            //after 10 seconds add a new stop
-                            await Future.delayed(const Duration(seconds: 10));
-                            var stop = WayPoint(
-                                name: "Gas Station",
-                                latitude: 38.911176544398,
-                                longitude: -77.04014366543564,
-                                isSilent: false);
-                            MapBoxNavigation.instance
-                                .addWayPoints(wayPoints: [stop]);
+                            var filePath = await writeJsonToFile();
+                            await MapBoxNavigation.instance.startOffNavigation(
+                              routes: filePath,
+                            );
+                            // _isMultipleStop = true;
+                            // var wayPoints = <WayPoint>[];
+                            // wayPoints.add(_origin);
+                            // wayPoints.add(_stop1);
+                            // wayPoints.add(_stop2);
+                            // wayPoints.add(_stop3);
+                            // wayPoints.add(_destination);
+                            //
+                            // MapBoxNavigation.instance.startNavigation(
+                            //     wayPoints: wayPoints,
+                            //     options: MapBoxOptions(
+                            //         mode: MapBoxNavigationMode.driving,
+                            //         simulateRoute: true,
+                            //         language: "en",
+                            //         allowsUTurnAtWayPoints: true,
+                            //         units: VoiceUnits.metric));
+                            // //after 10 seconds add a new stop
+                            // await Future.delayed(const Duration(seconds: 10));
+                            // var stop = WayPoint(
+                            //     name: "Gas Station",
+                            //     latitude: 38.911176544398,
+                            //     longitude: -77.04014366543564,
+                            //     isSilent: false);
+                            // MapBoxNavigation.instance
+                            //     .addWayPoints(wayPoints: [stop]);
                           },
                         ),
                         const SizedBox(
@@ -345,20 +342,20 @@ class _SampleNavigationAppState extends State<SampleNavigationApp> {
                 ),
               ),
             ),
-            // SizedBox(
-            //   height: 300,
-            //   child: Container(
-            //     color: Colors.grey,
-            //     child: MapBoxNavigationView(
-            //         options: _navigationOption,
-            //         onRouteEvent: _onEmbeddedRouteEvent,
-            //         onCreated:
-            //             (MapBoxNavigationViewController controller) async {
-            //           _controller = controller;
-            //           controller.initialize();
-            //         }),
-            //   ),
-            // )
+            SizedBox(
+              height: 0,
+              child: Container(
+                color: Colors.grey,
+                child: MapBoxNavigationView(
+                    options: _navigationOption,
+                    onRouteEvent: _onEmbeddedRouteEvent,
+                    onCreated:
+                        (MapBoxNavigationViewController controller) async {
+                      _controller = controller;
+                      controller.initialize();
+                    }),
+              ),
+            )
           ]),
         ),
       ),

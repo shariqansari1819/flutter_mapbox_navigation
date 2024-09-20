@@ -173,7 +173,8 @@ class MethodChannelFlutterMapboxNavigation
 
   RouteEvent _parseRouteEvent(String jsonString) {
     RouteEvent event;
-    final map = json.decode(jsonString);
+    var directJson = jsonString.split("*");
+    final map = json.decode(directJson[0]);
     final progressEvent =
         RouteProgressEvent.fromJson(map as Map<String, dynamic>);
     if (progressEvent.isProgressEvent!) {

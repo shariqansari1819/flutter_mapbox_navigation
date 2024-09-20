@@ -403,17 +403,7 @@ class FlutterMapboxNavigationPlugin : FlutterPlugin, MethodCallHandler,
         points.map { waypointSet.add(it) }
 
         sendEvent(MapBoxEvents.ROUTE_BUILDING)
-        var accessToken =
-            PluginUtilities.getResourceFromContext(currentContext, "mapbox_access_token")
 
-        val navigationOptions = NavigationOptions.Builder(currentContext)
-            .accessToken(accessToken)
-            .build()
-//        MapboxNavigationApp
-//            .setup(navigationOptions)
-//            .attach(this)
-//
-        MapboxNavigationApp.current()
         MapboxNavigationApp.current()!!.requestRoutes(
             routeOptions = RouteOptions
                 .builder()
@@ -454,9 +444,10 @@ class FlutterMapboxNavigationPlugin : FlutterPlugin, MethodCallHandler,
 
                     val jsonArrayString =
                         Gson().toJson(routes.map { it.directionsResponse.toJson() })
-//                    val routeOptionJson = Gson().toJson(routes.map { it.routeOptions.toJson() })
 
-                    result.success(jsonArrayString)
+                    val routeOptionJson = Gson().toJson(routes.map { it.routeOptions.toJson() })
+
+                    result.success("$jsonArrayString*$routeOptionJson")
                 }
             }
         )

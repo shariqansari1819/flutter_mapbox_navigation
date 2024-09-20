@@ -53,6 +53,7 @@ import com.mapbox.navigation.core.trip.session.VoiceInstructionsObserver
 import com.mapbox.navigation.dropin.map.MapViewObserver
 import com.mapbox.navigation.dropin.navigationview.NavigationViewListener
 import com.mapbox.navigation.utils.internal.ifNonNull
+import org.json.JSONArray
 import java.io.File
 
 class NavigationActivity : AppCompatActivity() {
@@ -208,35 +209,43 @@ class NavigationActivity : AppCompatActivity() {
 //                        ), RouteOptions.fromJson(Gson().toJson(response[0].routeOptions))
 //                    ))
 
-
+            var directionJson = route!!.split("*")
             val directionsRoutesList: List<String> =
-                Gson().fromJson(route, object : TypeToken<List<String>>() {}.type)
+                Gson().fromJson(directionJson[0], object : TypeToken<List<String>>() {}.type)
+            val routeOptionsList: List<String> =
+                Gson().fromJson(directionJson[1], object : TypeToken<List<String>>() {}.type)
             var navigationList = directionsRoutesList.map { json ->
                 val directionsRoute = DirectionsResponse.fromJson(json)
+//                val jsonArray = JSONArray(directionJson[1])
+//                val firstObjectString = jsonArray.getString(0)
                 NavigationRoute.create(
-                    directionsRoute, RouteOptions.fromJson(
-                        "{\n" +
-                                "        \"alternatives\": true,\n" +
-                                "        \"annotations\": \"congestion_numeric,maxspeed,closure,speed,duration,distance\",\n" +
-                                "        \"bannerInstructions\": true,\n" +
-                                "        \"baseUrl\": \"https://api.mapbox.com\",\n" +
-                                "        \"continueStraight\": true,\n" +
-                                "        \"coordinates\": \"-122.4353977,37.7744068;-122.4240981,37.7655696\",\n" +
-                                "        \"enableRefresh\": true,\n" +
-                                "        \"geometries\": \"polyline6\",\n" +
-                                "        \"language\": \"en\",\n" +
-                                "        \"overview\": \"full\",\n" +
-                                "        \"profile\": \"driving-traffic\",\n" +
-                                "        \"roundaboutExits\": true,\n" +
-                                "        \"steps\": true,\n" +
-                                "        \"user\": \"mapbox\",\n" +
-                                "        \"voiceInstructions\": true,\n" +
-                                "        \"voiceUnits\": \"imperial\",\n" +
-                                "        \"waypointIndices\": \"0;1\",\n" +
-                                "        \"waypointNames\": \"Home;Store\"\n" +
-                                "      }"
-                    )
+                    directionsRoute, RouteOptions.fromJson(routeOptionsList[0]),
+                    RouterOrigin.Onboard
                 )
+//                NavigationRoute.create(
+//                    directionsRoute, RouteOptions.fromJson(
+//                        "{\n" +
+//                                "        \"alternatives\": true,\n" +
+//                                "        \"annotations\": \"congestion_numeric,maxspeed,closure,speed,duration,distance\",\n" +
+//                                "        \"bannerInstructions\": true,\n" +
+//                                "        \"baseUrl\": \"https://api.mapbox.com\",\n" +
+//                                "        \"continueStraight\": true,\n" +
+//                                "        \"coordinates\": \"-122.4353977,37.7744068;-122.4240981,37.7655696\",\n" +
+//                                "        \"enableRefresh\": true,\n" +
+//                                "        \"geometries\": \"polyline6\",\n" +
+//                                "        \"language\": \"en\",\n" +
+//                                "        \"overview\": \"full\",\n" +
+//                                "        \"profile\": \"driving-traffic\",\n" +
+//                                "        \"roundaboutExits\": true,\n" +
+//                                "        \"steps\": true,\n" +
+//                                "        \"user\": \"mapbox\",\n" +
+//                                "        \"voiceInstructions\": true,\n" +
+//                                "        \"voiceUnits\": \"imperial\",\n" +
+//                                "        \"waypointIndices\": \"0;1\",\n" +
+//                                "        \"waypointNames\": \"Home;Store\"\n" +
+//                                "      }"
+//                    )
+//                )
             }
 
             binding.navigationView.api.routeReplayEnabled(FlutterMapboxNavigationPlugin.simulateRoute)
